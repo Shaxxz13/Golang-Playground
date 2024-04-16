@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -9,6 +10,12 @@ import (
 	"os"
 	"runtime"
 )
+
+type Words struct {
+	Page  string   `json:"page"` //`json:"page"` this will parse input json format into struct type
+	Input string   `json:"input"`
+	Words []string `json:"words"`
+}
 
 // Checking HTTP Requests using input arguments
 
@@ -33,14 +40,14 @@ func main() {
 		fmt.Printf("The URL is invalid: %s\n", err)
 
 	}
-	response, err = http.Get(args[1])
+	response, err := http.Get(args[1])
 
 	if err != nil {
 		log.Fatal(err)
 
 	}
 
-	defer response.Body.close()
+	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -48,4 +55,18 @@ func main() {
 
 	}
 
+	if response.StatusCode != 200 {
+
+		fmt.Printf("HTTP Status Code: %d\n Whole Body: %s\n", response.StatusCode, body)
+		os.Exit(1)
+	}
+
+	var words Words
+
+	err = json.Unmarshal(body, &words)
+	if err != nil {
+		log.Fatal(err)
+
+	}
+	fmt.Printf("json parsed\nPage: %s\nWords: %v\n", words.Page, words.Words)
 }
